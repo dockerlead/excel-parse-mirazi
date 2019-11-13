@@ -1,0 +1,102 @@
+<html>
+  <head>
+    <title>15% bla value Calculator</title>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <link rel="stylesheet" href="15bla.css">
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.0/css/bootstrap.min.css">
+  </head>
+  <body>
+    <!-- navigation bar -->
+    <nav class="navbar navbar-inverse">
+      <div class="container-fluid">
+        <div class="navbar-header">
+          <a class="navbar-brand" href="#">15 Percentage Calculator</a>
+        </div>
+        <ul class="nav navbar-nav">
+          <li class="active"><a href="#">:)</a></li>
+          <li class="active"><a href="#">:)</a></li>
+        </ul>
+      </div>
+    </nav>
+    <!-- body starts from here -->
+    <div class="container">
+      <div class="row">
+        <div id="result" class="col-md-6 col-md-offset-3">Calculation result will be downloaded fast as rocket!</div>
+        </div>
+      </div>
+      <div class="row" style="margin-top: 30px;">
+        <div class="col-md-6 col-md-offset-3" style="text-align: center;">
+          <input type="submit" class="btn btn-success" value="Calculate and Download!" onclick="doit('xlsx','15percent.xlsx');">
+        </div>
+      </div>
+    </div>
+    <!-- import js library -->
+    <script type="text/javascript" src="xlsx.full.min.js"></script>
+    <!-- Do the main task -->
+    <script>
+      function doit(type, filename) {
+        /* set up XMLHttpRequest */
+        var url = filename;
+        var oReq = new XMLHttpRequest();
+        oReq.open("GET", url, true);
+        oReq.responseType = "arraybuffer";
+
+        oReq.onload = function(e) {
+          var arraybuffer = oReq.response;
+
+          /* convert data to binary string */
+          var data = new Uint8Array(arraybuffer);
+          var arr = new Array();
+          for(var i = 0; i != data.length; ++i) arr[i] = String.fromCharCode(data[i]);
+          var bstr = arr.join("");
+
+          /* Call XLSX */
+          var workbook = XLSX.read(bstr, {type:"binary"});
+
+          /* DO SOMETHING WITH workbook HERE */
+          var first_sheet_name = workbook.SheetNames[0];
+          /* Get worksheet */
+          var worksheet = workbook.Sheets[first_sheet_name];
+          var jsondata = XLSX.utils.sheet_to_json(worksheet,{ raw: true, defval: null,});
+          /* Processing Data !!!Main Part*/
+          for (var i=0; i<jsondata.length; i++){
+            var a = jsondata[i]['a'];
+            var b = jsondata[i]['b'];
+            var c = jsondata[i]['c'];
+            var d = jsondata[i]['d'];
+            // var x = jsondata[i]['x'];
+            // var y = jsondata[i]['y'];
+            // y = ((1-a)*x-b-c-d)/d;
+            var x = 0;
+            var y = 0;
+            while (!(y>0.155 && y<0.160)) {
+              if (d==0 || (a==-1&&b==-1&&c==-1)) break;
+              x += 0.001;
+              y = ((1-a)*x-b-c-d)/d;
+            }
+            console.log(i + "\t" + x + "\t\t" + y);
+            jsondata[i]['x'] = x;
+            jsondata[i]['y'] = y;
+
+          }
+
+          //console.log(jsondata);
+          /* make the worksheet */
+          var ws = XLSX.utils.json_to_sheet(jsondata);
+
+          /* add to workbook */
+          var wb = XLSX.utils.book_new();
+          XLSX.utils.book_append_sheet(wb, ws, "People");
+
+          var timeStamp = new Date();
+          var filename = "Result" + timeStamp + ".xlsx";
+          /* Write workbook and Download */
+          var result = XLSX.writeFile(wb, filename);
+          if ((typeof console !== 'undefined') && (result != false)) console.log("Success!\n" + timeStamp);
+
+        }
+        oReq.send();
+      }
+    </script>
+  </body>
+</html>
